@@ -1,54 +1,41 @@
 /*
  ============================================================================
- Name        : brtos_win32.c
- Author      : Carlos H. Barriquello
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
+ Nome       : brtos_win32.c
+ Autor      : Carlos H. Barriquello
  ============================================================================
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
-/* BRTOS includes. */
+/* BRTOS includes */
 #include "BRTOS.h"
 #include "tasks.h"
 
 BRTOS_TH th1, th2, th3;
 
+#define STACK_SIZE_DEF    16		/* tamanho de pilha padrão */
+
 extern void stimer_test(void);
 
 int main(void) {
-	  puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 
-	  // Initialize BRTOS
+	  /* Inicia as variaveis do BRTOS */
 	  BRTOS_Init();
 
 	  stimer_test();
 
-	  if(OSInstallTask(&exec,"Teste 1",16,3,&th1) != OK)
-	  {
-	    while(1){};
-	  };
+	  /* Instala as tarefas */
+	  assert(OSInstallTask(&exec,"Teste 1",STACK_SIZE_DEF,3,&th1) != OK);
 
+	  assert(OSInstallTask(&exec2,"Teste 2",STACK_SIZE_DEF,5,&th2) != OK);
 
-	  if(OSInstallTask(&exec2,"Teste 2",16,5,&th2) != OK)
-	  {
-	    while(1){};
-	  };
+	  assert(OSInstallTask(&exec3,"Teste 3",STACK_SIZE_DEF,10,&th3) != OK);
 
-	  if(OSInstallTask(&exec3,"Teste 3",16,10,&th3) != OK)
-	  {
-	    while(1){};
-	  };
-
-	  // Start Task Scheduler
-	  if(BRTOSStart() != OK)
-	  {
-	    for(;;){};
-	  };
+	  /* Inicia o escalonador do BRTOS */
+	  assert(BRTOSStart() != OK);
 
 	  return EXIT_SUCCESS;
 }
