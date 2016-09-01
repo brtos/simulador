@@ -25,6 +25,9 @@
 *   Date:     25/03/2016
 *
 *********************************************************************************************************/
+/* Obs.: este port para simular o BRTOS no Windows foi baseado no simulador para Windows do sistema FreeRTOS,
+ * disponivel em: http://www.freertos.org/FreeRTOS-Windows-Simulator-Emulator-for-Visual-Studio-and-Eclipse-MingW.html
+ * */
 #include "BRTOS.h"
 #include "stdint.h"
 
@@ -35,22 +38,18 @@
 #endif
 
    /*
-   * Created as a high priority thread, this function uses a timer to simulate
-   * a tick interrupt being generated on an embedded target.  In this Windows
-   * environment the timer does not achieve anything approaching real time
-   * performance though.
+   * Cria uma thread de alta prioridade para simular o Tick Timer
    */
-  static DWORD WINAPI SimulatedPeripheralTimer( LPVOID lpParameter );
+  static DWORD WINAPI TimerSimulado( LPVOID lpParameter );
 
   /*
-   * Process all the simulated interrupts - each represented by a bit in
-   * ulPendingInterrupts variable.
+   * Processa todas as interrupcoes simuladas - cada bit em
+   * PendingInterrupts representa uma interrupcao.
    */
-  static void ProcessSimulatedInterrupts( void );
+  static void ProcessaInterrupcoesSimuladas( void );
 
   /*
-   * Interrupt handlers used by the kernel itself.  These are executed from the
-   * simulated interrupt handler thread.
+   * "Interrupt handlers" usados pelo BRTOS.
    */
   static uint32_t SwitchContext( void );
   static uint32_t TickTimer( void );
@@ -63,36 +62,25 @@
 
   /*-----------------------------------------------------------*/
 
-  /* The WIN32 simulator runs each task in a thread.  The context switching is
-  managed by the threads, so the task stack does not have to be managed directly,
-  although the task stack is still used to hold an xThreadState structure this is
-  the only thing it will ever hold.  The structure indirectly maps the task handle
-  to a thread handle. */
+  /* O simulador para Windows utiliza a biblioteca de threads do Windows para criar as tarefas e realizar
+   * a troca de contexto. Cada tarefa é uma thread. */
   typedef struct
   {
-  	/* Handle of the thread that executes the task. */
-  	void *Thread;
-
+  	void *Thread; /* Ponteiro para a thread que representa a tarefa. */
   } ThreadState;
 
-  /* Simulated interrupts waiting to be processed.  This is a bit mask where each
-  bit represents one interrupt, so a maximum of 32 interrupts can be simulated. */
+  /* Variavel usada para simular interrupcoes.  Cada bi representa uma interrupcao. */
   static volatile uint32_t PendingInterrupts = 0UL;
 
   #define MAX_INTERRUPTS	(sizeof(PendingInterrupts)*8)
 
-  /* An event used to inform the simulated interrupt processing thread (a high
-  priority thread that simulated interrupt processing) that an interrupt is
-  pending. */
+  /* Evento usado para avisar a thread que simula as interrupcoes (e tem prioridade mais alta) de que uma interrupcao aconteceu. */
   static void *InterruptEvent = NULL;
 
-  /* Mutex used to protect all the simulated interrupt variables that are accessed
-  by multiple threads. */
+  /* Mutex ussado para proteger o acesso das variaveis usadas nas interrupcoes simuladas das tarefas. */
   static void *InterruptEventMutex = NULL;
 
-  /* Handlers for all the simulated software interrupts.  The first two positions
-  are used for the Yield and Tick interrupts so are handled slightly differently,
-  all the other interrupts can be user defined. */
+  /* Vetor de inrerrupcoes simuladas. */
   static uint32_t (*IsrHandler[ MAX_INTERRUPTS ])( void ) = { 0 };
 
 
@@ -101,7 +89,8 @@
 
   INT32U SPvalue;
 
-  static DWORD WINAPI SimulatedPeripheralTimer( LPVOID Parameter )
+  /* SImulacao da interrupcao do Tick Timer*/
+  static DWORD WINAPI TimerSimulado( LPVOID Parameter )
   {
 	  uint32_t MinimumWindowsBlockTime;
 
@@ -207,7 +196,7 @@ void CreateVirtualStack(void(*FctPtr)(void), INT16U NUMBER_OF_STACKED_BYTES)
 		pThreadState = ( ThreadState * ) ( TopOfStack - sizeof( ThreadState ) );
 
 
-		/* Create the thread itself. */
+		/* Cria a thread da tarefa. */
  	  	pThreadState->Thread = CreateThread( NULL, 0, ( LPTHREAD_START_ROUTINE ) FctPtr, parameters, CREATE_SUSPENDED, NULL );
  	  	if( pThreadState->Thread == NULL) return;
  	  	SetThreadAffinityMask( pThreadState->Thread, 0x01 );
@@ -230,10 +219,8 @@ void CreateVirtualStack(void(*FctPtr)(void), INT16U NUMBER_OF_STACKED_BYTES)
 
 void TickTimerSetup(void)
 {
-	/* In the Win32 port, the timer is simulated using a high priority thread,
-	 * which is created and started in the function BRTOSStartFirstTask
+	/* Nao utilizda, pois no simulador o timer é simulador por uma thread com prioridade mais alta.
 	 */
-
 }
 
 
@@ -246,12 +233,11 @@ void TickTimerSetup(void)
 
 void OSRTCSetup(void)
 {  
-
+  /* Nao utilizado */
 }
 
-
-
 /*-----------------------------------------------------------*/
+/* "handler" da interrupcao do timer */
 static uint32_t TickTimer(void)
 {
 
@@ -263,7 +249,7 @@ static uint32_t TickTimer(void)
 }
 
 /*-----------------------------------------------------------*/
-
+/* "handler" da interrupcao para troca de contexto */
 static uint32_t SwitchContext(void)
 {
 	return TRUE;
@@ -278,12 +264,11 @@ void BTOSStartFirstTask( void )
 	void *Handle;
 	ThreadState *pThreadState;
 
-	/* Install the interrupt handlers used by the scheduler itself. */
-	SetInterruptHandler( INTERRUPT_SWC, SwitchContext );
-	SetInterruptHandler( INTERRUPT_TICK, TickTimer );
+	/* Instala os "interrupt handlers" usados pelo BRTOS. */
+	ConfiguraInterruptHandler( INTERRUPT_SWC, SwitchContext );
+	ConfiguraInterruptHandler( INTERRUPT_TICK, TickTimer );
 
-	/* Create the events and mutexes that are used to synchronise all the
-	threads. */
+	/* Cria os eventos e mutexes usados para sincronizar as threads. */
 	InterruptEventMutex = CreateMutex( NULL, FALSE, NULL );
 	InterruptEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
 
@@ -292,9 +277,8 @@ void BTOSStartFirstTask( void )
 		Success = FALSE;
 	}
 
-	/* Set the priority of this thread such that it is above the priority of
-	the threads that run tasks.  This higher priority is required to ensure
-	simulated interrupts take priority over tasks. */
+	/* Coloca a prioridade desta para um valor mais alto. Assim, ela pode simular
+	 * as interrupcoes que "interrompem" as tarefas. */
 	Handle = GetCurrentThread();
 	if( Handle == NULL )
 	{
@@ -313,11 +297,8 @@ void BTOSStartFirstTask( void )
 
 	if( Success == TRUE )
 	{
-		/* Start the thread that simulates the timer peripheral to generate
-		tick interrupts.  The priority is set below that of the simulated
-		interrupt handler so the interrupt event mutex is used for the
-		handshake / overrun protection. */
-		Handle = CreateThread( NULL, 0, SimulatedPeripheralTimer, NULL, CREATE_SUSPENDED, NULL );
+		/* Cria e inicia a thread que simula o Tick Timer */
+		Handle = CreateThread( NULL, 0, TimerSimulado, NULL, CREATE_SUSPENDED, NULL );
 		if( Handle != NULL )
 		{
 			SetThreadPriority( Handle, THREAD_PRIORITY_BELOW_NORMAL );
@@ -326,40 +307,31 @@ void BTOSStartFirstTask( void )
 			ResumeThread( Handle );
 		}
 
-		/* Start the highest priority task by obtaining its associated thread
-		state structure, in which is stored the thread handle. */
+		/* Inicia a tarefa de maior prioridade */
 		pThreadState = ( ThreadState * ) ( ( size_t * ) SPvalue );
 		iNesting = 0;
-
-		/* Bump up the priority of the thread that is going to run, in the
-		hope that this will assist in getting the Windows thread scheduler to
-		behave as an embedded engineer might expect. */
 		ResumeThread( pThreadState->Thread );
 
-		/* Handle all simulated interrupts - including yield requests and
-		simulated ticks. */
-		ProcessSimulatedInterrupts();
+		/* Atende aos pedidos de interrupcoes */
+		ProcessaInterrupcoesSimuladas();
 	}
 
 }
 /*-----------------------------------------------------------*/
 
 
-static void ProcessSimulatedInterrupts( void )
+static void ProcessaInterrupcoesSimuladas( void )
 {
 	uint32_t SwitchRequired, i;
 	ThreadState *pThreadState;
 	void *ObjectList[ 2 ];
 	CONTEXT Context;
 
-	/* Going to block on the mutex that ensured exclusive access to the simulated
-	interrupt objects, and the event that signals that a simulated interrupt
-	should be processed. */
+	/* Cria bloco com mutex e evento usado para indicar que uma interrupcao ocorreu.  */
 	ObjectList[ 0 ] = InterruptEventMutex;
 	ObjectList[ 1 ] = InterruptEvent;
 
-	/* Create a pending tick to ensure the first task is started as soon as
-	this thread pends. */
+	/* Indica que uma interrupcao do Tick Timer ocorreu. */
 	PendingInterrupts |= ( 1 << INTERRUPT_TICK );
 	SetEvent( InterruptEvent );
 
@@ -368,28 +340,26 @@ static void ProcessSimulatedInterrupts( void )
 	{
 		WaitForMultipleObjects( sizeof( ObjectList ) / sizeof( void * ), ObjectList, TRUE, INFINITE );
 
-		/* Used to indicate whether the simulated interrupt processing has
-		necessitated a context switch to another task/thread. */
+		/* Indica se e necessario realizar a troca de contexto */
 		SwitchRequired = FALSE;
 
-		/* For each interrupt we are interested in processing, each of which is
-		represented by a bit in the 32bit ulPendingInterrupts variable. */
+		/* Executa cada interrupcao que estiver pendente */
 		for( i = 0; i < MAX_INTERRUPTS; i++ )
 		{
-			/* Is the simulated interrupt pending? */
+			/* Interrupcao esta pendente ? */
 			if( PendingInterrupts & ( 1UL << i ) )
 			{
-				/* Is a handler installed? */
+				/* Tem um "handler" associado ? */
 				if( IsrHandler[ i ] != NULL )
 				{
-					/* Run the actual handler. */
+					/* Executa-o. */
 					if( IsrHandler[ i ]() != FALSE )
 					{
 						SwitchRequired |= ( 1 << i );
 					}
 				}
 
-				/* Clear the interrupt pending bit. */
+				/* Limpa o bit de interrupcao pendente. */
 				PendingInterrupts &= ~( 1UL << i );
 			}
 		}
@@ -397,30 +367,25 @@ static void ProcessSimulatedInterrupts( void )
 		if( SwitchRequired != FALSE )
 		{
 
-			/* Select the next task to run. */
+			/* Seleciona a proxima tarefa. */
 			 SelectedTask = OSSchedule();
 
-			/* If the task selected to enter the running state is not the task
-			that is already in the running state. */
+			/* Verifica se a tarefa selecionada e diferente da atual. */
 			if( currentTask != SelectedTask )
 			{
 
-				/* Suspend the old thread. */
+				/* Suspende a thread antiga */
 				pThreadState = ( ThreadState *) ( ( size_t * ) ContextTask[currentTask].StackPoint );
 				SuspendThread( pThreadState->Thread );
 
-				/* Ensure the thread is actually suspended by performing a
-				synchronous operation that can only complete when the thread is
-				actually suspended.  The below code asks for dummy register
-				data. */
+				/* Verifica se a thread foi mesmo suspensa. */
 				Context.ContextFlags = CONTEXT_INTEGER;
 				( void ) GetThreadContext( pThreadState->Thread, &Context );
 
 
 				currentTask = SelectedTask;
 
-				/* Obtain the state of the task now selected to enter the
-				Running state. */
+				/* Executa a proxima thread e respectiva tarefa. */
 				pThreadState = ( ThreadState * ) ( ( size_t *) ContextTask[currentTask].StackPoint);
 				ResumeThread( pThreadState->Thread );
 			}
@@ -434,18 +399,15 @@ static void ProcessSimulatedInterrupts( void )
 
 /*-----------------------------------------------------------*/
 
-void GenerateSimulatedInterrupt( uint32_t InterruptNumber )
+void GeraInterrupcaoSimulada( uint32_t InterruptNumber )
 {
 
 	if( ( InterruptNumber < MAX_INTERRUPTS ) && ( InterruptEventMutex != NULL ) )
 	{
-		/* Yield interrupts are processed even when critical nesting is non-zero. */
 		WaitForSingleObject( InterruptEventMutex, INFINITE );
 		PendingInterrupts |= ( 1 << InterruptNumber );
 
-		/* The simulated interrupt is now held pending, but don't actually process it
-		yet if this call is within a critical section.  It is possible for this to
-		be in a critical section as calls to wait for mutexes are accumulative. */
+		/* Se estiver em uma secao critica a interrupcao sera agendada mas nao sera executada. */
 		if( iNesting == 0 )
 		{
 			SetEvent( InterruptEvent );
@@ -458,7 +420,7 @@ void GenerateSimulatedInterrupt( uint32_t InterruptNumber )
 
 /*-----------------------------------------------------------*/
 
-void SetInterruptHandler( uint32_t InterruptNumber, uint32_t (*Handler)( void ) )
+void ConfiguraInterruptHandler( uint32_t InterruptNumber, uint32_t (*Handler)( void ) )
 {
 	if( InterruptNumber < MAX_INTERRUPTS )
 	{
@@ -479,8 +441,7 @@ void SetInterruptHandler( uint32_t InterruptNumber, uint32_t (*Handler)( void ) 
 void EnterCritical( void )
 {
 
-	/* The interrupt event mutex is held for the entire critical section,
-	effectively disabling (simulated) interrupts. */
+	/* Adquire o mutex para desabilitar as interrupcoes simuladas. */
 	WaitForSingleObject( InterruptEventMutex, INFINITE );
 	iNesting++;
 }
@@ -490,13 +451,10 @@ void ExitCritical( void )
 {
 	int32_t MutexNeedsReleasing;
 
-	/* The interrupt event mutex should already be held by this thread as it was
-	obtained on entry to the critical section. */
-
+	/* Se esta aqui, entao esta com o mutex. */
 	MutexNeedsReleasing = TRUE;
 
-	/* Were any interrupts set to pending while interrupts were
-	(simulated) disabled? */
+	/* Verifica se ocorreram mais interrupcoes */
 	if(iNesting>0)
 	{
 		iNesting--;
@@ -505,8 +463,7 @@ void ExitCritical( void )
 		{
 			SetEvent( InterruptEvent );
 
-			/* Mutex will be released now, so does not require releasing
-			on function exit. */
+			/* Mutex sera liberado */
 			MutexNeedsReleasing = FALSE;
 			ReleaseMutex( InterruptEventMutex );
 		}

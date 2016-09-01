@@ -80,7 +80,7 @@ extern INT32U SPvalue;
 ////////////////////////////////////////////////////////////
 
 /// Defines the change context command of the choosen processor
-#define ChangeContext()			GenerateSimulatedInterrupt( INTERRUPT_SWC )
+#define ChangeContext()			GeraInterrupcaoSimulada( INTERRUPT_SWC )
 
 #define OS_INT_ENTER()			iNesting++;
 #define OS_INT_EXIT()			if(iNesting > 0) iNesting--;
@@ -146,22 +146,18 @@ void OSRTCSetup(void);
 void BTOSStartFirstTask(void);
 
 /*
- * Raise a simulated interrupt represented by the bit mask in ulInterruptMask.
- * Each bit can be used to represent an individual interrupt - with the first
- * two bits being used for the Yield and Tick interrupts respectively.
+ * Sinaliza que uma interrupcao simulada aconteceu.
 */
-void GenerateSimulatedInterrupt( uint32_t InterruptNumber );
+void GeraInterrupcaoSimulada( uint32_t InterruptNumber );
 
 /*
- * Install an interrupt handler to be called by the simulated interrupt handler
- * thread.  The interrupt number must be above any used by the kernel itself
- * (at the time of writing the kernel was using interrupt numbers 0, 1, and 2
- * as defined above).  The number must also be lower than 32.
+ * Instala um "interrupt handler". O numero deve ser unico e maior do que 2
+ * (pois 0 e 1 sao usados pelo sistema) e menor do que 32.
  *
- * Interrupt handler functions must return a non-zero value if executing the
- * handler resulted in a task switch being required.
+ * O "handler" deve retornar um valor maior que 0 (TRUE) para verificar se ncessita-se
+ * realizar a troca de contexto
  */
-void SetInterruptHandler( uint32_t InterruptNumber, uint32_t (*Handler)( void ) );
+void ConfiguraInterruptHandler( uint32_t InterruptNumber, uint32_t (*Handler)( void ) );
 
 
 
