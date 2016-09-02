@@ -43,6 +43,11 @@
   static DWORD WINAPI TimerSimulado( LPVOID lpParameter );
 
   /*
+  * Cria uma thread de alta prioridade para simular a UART
+  */
+  static DWORD WINAPI UARTSimulada( LPVOID Parameter );
+
+  /*
    * Processa todas as interrupcoes simuladas - cada bit em
    * PendingInterrupts representa uma interrupcao.
    */
@@ -72,7 +77,7 @@
   /* Variavel usada para simular interrupcoes.  Cada bi representa uma interrupcao. */
   static volatile uint32_t PendingInterrupts = 0UL;
 
-  #define MAX_INTERRUPTS	(sizeof(PendingInterrupts)*8)
+  #define MAX_INTERRUPTS	3 //(sizeof(PendingInterrupts)*8)
 
   /* Evento usado para avisar a thread que simula as interrupcoes (e tem prioridade mais alta) de que uma interrupcao aconteceu. */
   static void *InterruptEvent = NULL;
@@ -154,6 +159,91 @@
   		return 0;
   	#endif
   }
+
+/*-----------------------------------------------------------*/
+/* SImulacao da interrupcao da UART */
+#define BAUDRATE  	  9600
+#define CHARTIME_MS   (10000/BAUDRATE)
+#include "../drivers/drivers.h"
+#include "stdio.h"
+#include "conio.h"
+
+static DWORD WINAPI UARTSimulada( LPVOID Parameter )
+{
+
+   	/* Just to prevent compiler warnings. */
+   	( void ) Parameter;
+
+   	for( ;; )
+   	{
+
+   		char c;
+
+   		static HANDLE stdinHandle;
+   	    // Get the IO handles
+   	    stdinHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+   	    while( 1 )
+   	    {
+   	        switch( WaitForSingleObject( stdinHandle, 1000 ) )
+   	        {
+				case( WAIT_TIMEOUT ):
+					break; // return from this function to allow thread to terminate
+				case( WAIT_OBJECT_0 ):
+					if( _kbhit() ) // _kbhit() always returns immediately
+					{
+					   c = _getch();
+					   goto get_char;
+					}
+					else // some sort of other events , we need to clear it from the queue
+					{
+						// clear events
+						INPUT_RECORD r[512];
+						DWORD read;
+						ReadConsoleInput( stdinHandle, r, 512, &read );
+					}
+					break;
+				case( WAIT_FAILED ):
+					break;
+				case( WAIT_ABANDONED ):
+					break;
+				default:
+					break;
+			}
+   	    }
+
+   	    get_char:
+
+   		WaitForSingleObject( InterruptEventMutex, INFINITE );
+
+   		Sleep((CHARTIME_MS > 0)? CHARTIME_MS:1);
+   		/* store received char */
+		do{
+	   		extern char UART_RX_buffer;
+	   		UART_RX_buffer = c;
+		}while(0);
+
+   		/* The UART has received a char, generate the simulated event. */
+   		PendingInterrupts |= ( 1 << INTERRUPT_UART );
+
+   		/* The interrupt is now pending - notify the simulated interrupt
+   		handler thread. */
+   		if( iNesting == 0 )
+   		{
+   			SetEvent( InterruptEvent );
+   		}
+
+   		/* Give back the mutex so the simulated interrupt handler unblocks
+   		and can	access the interrupt handler variables. */
+   		ReleaseMutex( InterruptEventMutex );
+   	}
+
+   	#ifdef __GNUC__
+   		/* Should never reach here - MingW complains if you leave this line out,
+   		MSVC complains if you put it in. */
+   		return 0;
+   	#endif
+}
   /*-----------------------------------------------------------*/
 
   /*-----------------------------------------------------------*/
@@ -307,6 +397,16 @@ void BTOSStartFirstTask( void )
 			ResumeThread( Handle );
 		}
 
+		/* Cria e inicia a thread que simula a UART */
+		Handle = CreateThread( NULL, 0, UARTSimulada, NULL, CREATE_SUSPENDED, NULL );
+		if( Handle != NULL )
+		{
+			SetThreadPriority( Handle, THREAD_PRIORITY_BELOW_NORMAL );
+			SetThreadPriorityBoost( Handle, TRUE );
+			SetThreadAffinityMask( Handle, 0x01 );
+			ResumeThread( Handle );
+		}
+
 		/* Inicia a tarefa de maior prioridade */
 		pThreadState = ( ThreadState * ) ( ( size_t * ) SPvalue );
 		iNesting = 0;
@@ -318,8 +418,6 @@ void BTOSStartFirstTask( void )
 
 }
 /*-----------------------------------------------------------*/
-
-
 static void ProcessaInterrupcoesSimuladas( void )
 {
 	uint32_t SwitchRequired, i;
@@ -334,7 +432,6 @@ static void ProcessaInterrupcoesSimuladas( void )
 	/* Indica que uma interrupcao do Tick Timer ocorreu. */
 	PendingInterrupts |= ( 1 << INTERRUPT_TICK );
 	SetEvent( InterruptEvent );
-
 
 	for(;;)
 	{

@@ -35,6 +35,8 @@ int main(void) {
 
 	  assert(OSInstallTask(&exec3,"Teste 3",STACK_SIZE_DEF,10,&th3) == OK);
 
+	  assert(OSInstallTask(&SerialTask,"Porta serial",STACK_SIZE_DEF,4,NULL) == OK);
+
 	  /* Inicia o escalonador do BRTOS */
 	  assert(BRTOSStart() == OK);
 

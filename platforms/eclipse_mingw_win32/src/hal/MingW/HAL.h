@@ -51,7 +51,7 @@
 #define OPTIMIZED_SCHEDULER 	0
 
 /// Define if nesting interrupt is active
-#define NESTING_INT 			0
+#define NESTING_INT 			1
 
 #define TASK_WITH_PARAMETERS 	0
 
