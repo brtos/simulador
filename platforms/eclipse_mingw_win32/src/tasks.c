@@ -25,13 +25,30 @@ void exec2(void)
 
 void exec3(void)
 {
-  char c = 0;
+	OS_Device_Control_t *dev_gpiob;
+	gpio_config_t gpiob;
+
+	OS_Device_Control_t *dev_gpiod;
+	gpio_config_t gpiod;
+
+	gpiob.used_pins_out = GPIO_PIN_8 | GPIO_PIN_7;
+	gpiob.used_pins_in = 0;
+	gpiob.irq_pins = 0;
+	dev_gpiob = OSDevOpen("GPIOB", &gpiob);
+
+	gpiod.used_pins_out = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8;
+	gpiod.used_pins_in = 0;
+	gpiod.irq_pins = 0;
+	dev_gpiod = OSDevOpen("GPIOD", &gpiod);
+
+	OSGPIOWrite(dev_gpiob,GPIO_PIN_8 | GPIO_PIN_7,1);
+	OSGPIOWrite(dev_gpiod,GPIO_PIN_1,1);
+
   while(1)
   {
-
 	  //printf("Task 3, input: %c\r\n", c);
 	  DelayTask(200);
-
+	  OSGPIOWrite(dev_gpiob,GPIO_PIN_8,1);
 
   }
 }

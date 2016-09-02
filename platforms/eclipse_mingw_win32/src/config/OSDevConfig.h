@@ -29,10 +29,7 @@ typedef enum
 void OSOpenUART(void *pdev, void *parameters);
 void OSOpenGPIO(void *pdev, void *parameters);
 void OSOpenPWM(void *pdev, void *parameters);
-#define DRIVER_LIST {{UART_TYPE, OSOpenUART}} //, {GPIO_TYPE, OSOpenGPIO},{PWM_TYPE, OSOpenPWM}}
+#define DRIVER_LIST {{UART_TYPE, OSOpenUART},{GPIO_TYPE, OSOpenGPIO}} //,{PWM_TYPE, OSOpenPWM}}
 
-
-/* Específico para o PWM */
-#define PMW_0_MUX_PIN_LIST {{GPIOE_BASE,GPIO_PE29_TIM0CH2,GPIO_PIN_29},{GPIOE_BASE,GPIO_PE30_TIM0CH3,GPIO_PIN_30}}
 
 #endif /* CONFIG_OSDEVCONFIG_H_ */
