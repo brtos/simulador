@@ -89,8 +89,7 @@
   static uint32_t (*IsrHandler[ MAX_INTERRUPTS ])( void ) = { 0 };
 
 
-#define TICK_PERIOD_MS  	(1000/configTICK_RATE_HZ)
-
+  #define TICK_PERIOD_MS  	(1000/configTICK_RATE_HZ)
 
   INT32U SPvalue;
 
@@ -306,12 +305,9 @@ void CreateVirtualStack(void(*FctPtr)(void), INT16U NUMBER_OF_STACKED_BYTES)
   /////                                                  /////
   ////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////
-
-void TickTimerSetup(void)
-{
-	/* Nao utilizda, pois no simulador o timer é simulador por uma thread com prioridade mais alta.
-	 */
-}
+ /* Nao utilizda, pois no simulador o timer é simulador por uma thread com prioridade mais alta.
+ */
+void TickTimerSetup(void){}
 
 
 ////////////////////////////////////////////////////////////
@@ -320,11 +316,8 @@ void TickTimerSetup(void)
 /////                                                  /////
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
-
-void OSRTCSetup(void)
-{  
-  /* Nao utilizado */
-}
+/* Nao utilizado */
+void OSRTCSetup(void){}
 
 /*-----------------------------------------------------------*/
 /* "handler" da interrupcao do timer */

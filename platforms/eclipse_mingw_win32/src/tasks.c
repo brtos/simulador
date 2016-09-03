@@ -12,13 +12,24 @@ void exec(void)
   }
 }
 
+#include "drivers/drivers.h"
 void exec2(void)
 {
 
-  uint32_t run = 0;
+  OS_Device_Control_t *adc;
+  adc_config_t adc0;
+  uint8_t buf[2];
+
+  adc0.polling_irq = ADC_POLLING;
+  adc0.resolution = ADC_RES_16;
+  adc0.samplerate = 1000;
+  adc0.timeout = 0;
+  adc = OSDevOpen("ADC0", &adc0);
+
   while(1)
   {
-	//printf("Task 2, run: %u\r\n", (uint32_t)run++);
+
+	OSDevRead(adc,buf,2);
     DelayTask(100);
   }
 }

@@ -9,8 +9,7 @@
 #define NUM_UART		1
 
 static BRTOS_Sem   *SerialTX[NUM_UART];
-// Declara um ponteiro para o bloco de controle da Porta Serial
-static BRTOS_Queue  *SerialQ[NUM_UART];
+static BRTOS_Queue *SerialQ[NUM_UART];
 
 static BRTOS_Mutex *SerialRMutex[NUM_UART];
 static BRTOS_Mutex *SerialWMutex[NUM_UART];
@@ -62,9 +61,9 @@ static size_t UART_Write(OS_Device_Control_t *dev, char *string, size_t size ){
 static size_t UART_Read(OS_Device_Control_t *dev, char *string, size_t size ){
 	size_t nbytes = 0;
 	uart_config_t *uart_conf = (uart_config_t *)dev->device->DriverData;
-	while(nbytes < size){
-		//if (OSQueuePend(SerialQ[dev->device_number], (uint8_t*)string, uart_conf->timeout) != READ_BUFFER_OK) goto failed_rx;
-		if (OSQueuePend(SerialQ[dev->device_number], (uint8_t*)string, 0) != READ_BUFFER_OK) goto failed_rx;
+	while(nbytes < size)
+	{
+		if (OSQueuePend(SerialQ[dev->device_number], (uint8_t*)string, uart_conf->timeout) != READ_BUFFER_OK) goto failed_rx;
 		string++;
 		nbytes++;
 	}
