@@ -10,8 +10,10 @@
 
 
 #define INTERRUPT_UART  2
-#define INTERRUPT_ADC   3
-#define INTERRUPT_DAC	4
+#define INTERRUPT_SPI   3
+#define INTERRUPT_I2C   4
+#define INTERRUPT_ADC   5
+#define INTERRUPT_DAC	6
 
 
 typedef enum{
@@ -74,6 +76,58 @@ typedef struct dac_config_t_
 	ostick_t 	timeout;
 	bool		write_mutex;
 }dac_config_t;
+
+typedef enum{
+	SPI_POLLING,
+	SPI_IRQ,
+}spi_irq_t;
+
+typedef enum{
+	SPI_BAUDRATE,
+	SPI_POLARITY,
+	SPI_QUEUE_SIZE,
+	SPI_TIMEOUT
+}spi_request_t;
+
+typedef enum{
+	SPI_P,
+	SPI_N
+}spi_pol_t;
+
+typedef struct spi_config_t_{
+	int 		baudrate;
+	spi_pol_t 	polarity;
+	spi_irq_t 	polling_irq;
+	int 		queue_size;
+	ostick_t 	timeout;
+	bool		mutex;
+}spi_config_t;
+
+typedef enum{
+	I2C_POLLING,
+	I2C_IRQ,
+}i2c_irq_t;
+
+typedef enum{
+	I2C_BAUDRATE,
+	I2C_DIRECTION,
+	I2C_QUEUE_SIZE,
+	I2C_TIMEOUT
+}i2c_request_t;
+
+typedef enum{
+	I2C_R,
+	I2C_W
+}i2c_dir_t;
+
+typedef struct i2c_config_t_{
+	int 		baudrate;
+	i2c_dir_t 	direction;
+	i2c_irq_t 	polling_irq;
+	int 		queue_size;
+	ostick_t 	timeout;
+	bool		mutex;
+}i2c_config_t;
 
 
 #endif /* DRIVERS_DRIVERS_H_ */
