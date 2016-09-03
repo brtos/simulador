@@ -35,8 +35,6 @@ static size_t GPIO_Read(OS_Device_Control_t *dev, char *string, size_t size ){
 
 static size_t GPIO_Set(OS_Device_Control_t *dev, uint32_t request, uint32_t value){
 
-	/* todo */
-
 	return 0;
 }
 
@@ -68,8 +66,6 @@ const device_api_t GPIO_api ={
 
 void OSOpenGPIO(void *pdev, void *parameters){
 	int i = 0;
-	unsigned long pins;
-	unsigned long mux = 0;
 	gpio_config_t *gpio_conf = (gpio_config_t *)parameters;
 	OS_Device_Control_t *dev = pdev;
 	switch(dev->device_number)

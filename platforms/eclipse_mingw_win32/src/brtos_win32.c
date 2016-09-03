@@ -31,11 +31,13 @@ int main(void) {
 	  /* Instala as tarefas */
 	  assert(OSInstallTask(&exec,"Teste 1",STACK_SIZE_DEF,3,&th1) == OK);
 
-	  assert(OSInstallTask(&exec2,"Teste 2",STACK_SIZE_DEF,5,&th2) == OK);
+	  assert(OSInstallTask(&TarefaADC,"Teste driver ADC",STACK_SIZE_DEF,5,&th2) == OK);
 
-	  assert(OSInstallTask(&exec3,"Teste 3",STACK_SIZE_DEF,10,&th3) == OK);
+//	  assert(OSInstallTask(&TarefaGPIO,"Teste driver GPIO",STACK_SIZE_DEF,10,&th3) == OK);
 
-	  assert(OSInstallTask(&SerialTask,"Porta serial",STACK_SIZE_DEF,4,NULL) == OK);
+//	  assert(OSInstallTask(&SerialTask,"Teste driver UART",STACK_SIZE_DEF,4,NULL) == OK);
+
+	  assert(OSInstallTask(&TerminalTask,"Terminal",STACK_SIZE_DEF,6,NULL) == OK);
 
 	  /* Inicia o escalonador do BRTOS */
 	  assert(BRTOSStart() == OK);

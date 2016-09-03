@@ -4,8 +4,7 @@
 #include "device.h"
 #include "drivers.h"
 
-#define NUM_ADC  1
-#define INTERRUPT_ADC   3
+#define NUM_ADC     1
 static BRTOS_Sem   *ADC[NUM_ADC];
 static BRTOS_Queue *ADCQ[NUM_ADC];
 static BRTOS_Mutex *ADCRMutex[NUM_ADC];
@@ -14,13 +13,12 @@ static BRTOS_Mutex *ADCRMutex[NUM_ADC];
 uint16_t ADC_buffer[NUM_ADC_CHAN];
 uint16_t ADC_chan;
 
-#include "math.h"
-
 struct adc_signal
 {
 	int freq;
 	int amp;
 };
+
 struct adc_signal ADC_Signals[] = {{60,3}};
 
 static int ADC_res = 8;
@@ -34,6 +32,7 @@ time_t clock_time(void)
   return (time_t)(time);
 }
 
+#include "math.h"
 static uint16_t quantizacao (double valor, double amp, int n)
 {
     double D = 2*amp/n;

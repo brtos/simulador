@@ -7,13 +7,13 @@ void exec(void)
   while(1)
   {
 
-	  printf("Tick Count: %u\r\n", (uint32_t)OSGetTickCount());
+	  //printf("Tick Count: %u\r\n", (uint32_t)OSGetTickCount());
 	  DelayTask(100);
   }
 }
 
 #include "drivers/drivers.h"
-void exec2(void)
+void TarefaADC(void)
 {
 
   OS_Device_Control_t *adc;
@@ -34,7 +34,7 @@ void exec2(void)
   }
 }
 
-void exec3(void)
+void TarefaGPIO(void)
 {
 	OS_Device_Control_t *dev_gpiob;
 	gpio_config_t gpiob;
@@ -95,4 +95,35 @@ void SerialTask(void)
 	}
 }
 
+#include "terminal.h"
+static void uart_init(uart_config_t* uart0 )
+{
+		uart0->baudrate = 9600;
+		uart0->parity = UART_PAR_EVEN;
+		uart0->polling_irq = UART_IRQ;
+		uart0->queue_size = 128;
+		uart0->stop_bits = UART_STOP_ONE;
+		uart0->timeout = 10;
+		uart0->read_mutex = false;
+		uart0->write_mutex = true;
+}
+void TerminalTask(void)
+{
+	uint8_t data = '\0';
 
+	OS_Device_Control_t *uart;
+	uart_config_t uart0;
+
+	uart_init(&uart0);
+	uart = OSDevOpen("UART0", &uart0);
+
+	printf("BRTOS terminal\r\n");
+	while(1)
+	{
+		if (OSDevRead(uart,&data,1) >= 1)
+		{
+			putchar(data);
+			if (terminal_input(data)) terminal_process();
+		}
+	}
+}

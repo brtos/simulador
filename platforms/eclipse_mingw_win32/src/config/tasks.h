@@ -1,4 +1,5 @@
 void exec(void);
-void exec2(void);
-void exec3(void);
+void TarefaADC(void);
+void TarefaGPIO(void);
 void SerialTask(void);
+void TerminalTask(void);

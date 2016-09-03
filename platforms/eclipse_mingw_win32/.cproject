@@ -33,6 +33,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src/hal/MingW&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/hal/MemoryAllocation&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/brtos/includes&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/modules/terminal&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1611421855" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -50,13 +51,14 @@
 					</folderInfo>
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.582139134.856789466" name="/" resourcePath="src/brtos">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.debug.1042619490" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.debug" unusedChildren="">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.debug" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.971808447" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.1113787719">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1061054878" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.1531988294" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base.508869230"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.2103946274" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.374604657"/>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.194834059" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1137198570">
-								<option id="gnu.c.compiler.option.include.paths.86338482" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.c.compiler.option.include.paths.86338482" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src/hal/MingW&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/hal/MemoryAllocation&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/brtos/includes&quot;"/>
