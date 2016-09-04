@@ -32,7 +32,8 @@ static void Init_I2C(void *parameters)
 	assert(OSSemCreate(0, &I2CTX[0]) == ALLOC_EVENT_OK);
 	assert(OSQueueCreate(i2c_conf->queue_size, &I2CQ[0]) == ALLOC_EVENT_OK);
 
-	if (i2c_conf->mutex == true){
+	if (i2c_conf->mutex == true)
+	{
 		OSMutexCreate (&I2CMutex[0], 0);
 	}
 }

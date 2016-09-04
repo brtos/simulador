@@ -82,6 +82,13 @@ typedef enum{
 	SPI_IRQ,
 }spi_irq_t;
 
+
+typedef enum{
+	SPI_MASTER,
+	SPI_SLAVE,
+}spi_mode_t;
+
+
 typedef enum{
 	SPI_BAUDRATE,
 	SPI_POLARITY,
@@ -98,6 +105,7 @@ typedef struct spi_config_t_{
 	int 		baudrate;
 	spi_pol_t 	polarity;
 	spi_irq_t 	polling_irq;
+	spi_mode_t  mode;
 	int 		queue_size;
 	ostick_t 	timeout;
 	bool		mutex;
@@ -107,6 +115,17 @@ typedef enum{
 	I2C_POLLING,
 	I2C_IRQ,
 }i2c_irq_t;
+
+typedef enum{
+	I2C_MASTER,
+	I2C_SLAVE,
+}i2c_mode_t;
+
+typedef enum{
+	I2C_ADDR7,
+	I2C_ADDR10,
+}i2c_size_t;
+
 
 typedef enum{
 	I2C_BAUDRATE,
@@ -124,6 +143,9 @@ typedef struct i2c_config_t_{
 	int 		baudrate;
 	i2c_dir_t 	direction;
 	i2c_irq_t 	polling_irq;
+	i2c_mode_t  mode;
+	i2c_size_t  addr_size;
+	int         addr;
 	int 		queue_size;
 	ostick_t 	timeout;
 	bool		mutex;

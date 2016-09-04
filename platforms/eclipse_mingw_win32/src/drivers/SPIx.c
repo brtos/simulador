@@ -10,7 +10,6 @@ static BRTOS_Sem   *SPITX[NUM_SPI];
 static BRTOS_Queue *SPIQ[NUM_SPI];
 static BRTOS_Mutex *SPIMutex[NUM_SPI];
 
-
 char SPI_buffer;
 static uint32_t SPIHandler(void)
 {
@@ -32,7 +31,8 @@ static void Init_SPI(void *parameters)
 	assert(OSSemCreate(0, &SPITX[0]) == ALLOC_EVENT_OK);
 	assert(OSQueueCreate(spi_conf->queue_size, &SPIQ[0]) == ALLOC_EVENT_OK);
 
-	if (spi_conf->mutex == true){
+	if (spi_conf->mutex == true)
+	{
 		OSMutexCreate (&SPIMutex[0], 0);
 	}
 }
@@ -66,7 +66,7 @@ failed_rx:
 }
 
 static size_t SPI_Set(OS_Device_Control_t *dev, uint32_t request, uint32_t value){
-	unsigned long config = 0;
+
 	size_t ret = 0;
 	spi_config_t *spi_conf = (spi_config_t *)dev->device->DriverData;
 
@@ -124,14 +124,16 @@ static size_t SPI_Get(OS_Device_Control_t *dev, uint32_t request){
 	return ret;
 }
 
-static const device_api_t SPI_api ={
+static const device_api_t SPI_api =
+{
 		.read = (Device_Control_read_t)SPI_Read,
 		.write = (Device_Control_write_t)SPI_Write,
 		.set = (Device_Control_set_t)SPI_Set,
 		.get = (Device_Control_get_t)SPI_Get
 };
 
-void OSOpenSPI(void *pdev, void *parameters){
+void OSOpenSPI(void *pdev, void *parameters)
+{
 	OS_Device_Control_t *dev = pdev;
 	Init_SPI(parameters);
 	dev->api = &SPI_api;
