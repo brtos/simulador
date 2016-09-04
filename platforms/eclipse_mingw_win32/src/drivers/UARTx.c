@@ -19,7 +19,10 @@ char UART_RX_buffer;
 static uint32_t UARTHandler(void)
 {
 	char c = UART_RX_buffer;
-	OSQueuePost(SerialQ[0], c);
+	if(SerialQ[0] != NULL)
+	{
+		OSQueuePost(SerialQ[0], c);
+	}
 	return TRUE;
 }
 

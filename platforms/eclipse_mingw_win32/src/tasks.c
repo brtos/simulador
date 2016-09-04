@@ -1,24 +1,26 @@
 #include "BRTOS.h"
 #include "stdio.h"
 #include "device.h"
-
-void exec(void)
-{
-  while(1)
-  {
-
-	  //printf("Tick Count: %u\r\n", (uint32_t)OSGetTickCount());
-	  DelayTask(100);
-  }
-}
-
 #include "drivers/drivers.h"
+
+void TarefaExemplo(void)
+{
+	while(1)
+	{
+		//printf("Tick count: %u\r\n", OSGetTickCount());
+		DelayTask(100);
+	}
+}
 void TarefaADC(void)
 {
 
   OS_Device_Control_t *adc;
   adc_config_t adc0;
   uint8_t buf[2];
+  uint16_t idx = 0;
+  uint16_t val;
+  #define BUFSIZE 256
+  uint16_t big_buffer[BUFSIZE];
 
   adc0.polling_irq = ADC_POLLING;
   adc0.resolution = ADC_RES_16;
@@ -28,8 +30,9 @@ void TarefaADC(void)
 
   while(1)
   {
-
 	OSDevRead(adc,buf,2);
+	val = (buf[0] << 8) + buf[1];
+	big_buffer[idx++%BUFSIZE] = val;
     DelayTask(100);
   }
 }

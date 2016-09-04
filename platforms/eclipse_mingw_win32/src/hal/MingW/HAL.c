@@ -25,11 +25,12 @@
 *   Date:     25/03/2016
 *
 *********************************************************************************************************/
-/* Obs.: este port para simular o BRTOS no Windows foi baseado no simulador para Windows do sistema FreeRTOS,
+/* Obs.: este codigo para simular o BRTOS no Windows foi baseado no simulador para Windows do sistema FreeRTOS,
  * disponivel em: http://www.freertos.org/FreeRTOS-Windows-Simulator-Emulator-for-Visual-Studio-and-Eclipse-MingW.html
  * */
 #include "BRTOS.h"
 #include "stdint.h"
+#include "stdio.h"
 
 #ifdef __GNUC__
 	#include "mmsystem.h"
@@ -37,14 +38,10 @@
 	#pragma comment(lib, "winmm.lib")
 #endif
 
-   /*
-   * Cria uma thread de alta prioridade para simular o Tick Timer
-   */
+  /* Cria uma thread de alta prioridade para simular o Tick Timer. */
   static DWORD WINAPI TimerSimulado( LPVOID lpParameter );
 
-  /*
-  * Cria uma thread de alta prioridade para simular a UART
-  */
+  /* Cria uma thread de alta prioridade para simular a UART. */
   static DWORD WINAPI UARTSimulada( LPVOID Parameter );
 
   /*
@@ -53,19 +50,11 @@
    */
   static void ProcessaInterrupcoesSimuladas( void );
 
-  /*
-   * "Interrupt handlers" usados pelo BRTOS.
-   */
+  /* "Interrupt handlers" usados pelo BRTOS. */
   static uint32_t SwitchContext( void );
   static uint32_t TickTimer( void );
 
-  /*
-   * Called when the process exits to let Windows know the high timer resolution
-   * is no longer required.
-   */
-  static BOOL WINAPI EndProcess( DWORD dwCtrlType );
-
-  /*-----------------------------------------------------------*/
+/*-----------------------------------------------------------*/
 
   /* O simulador para Windows utiliza a biblioteca de threads do Windows para criar as tarefas e realizar
    * a troca de contexto. Cada tarefa é uma thread. */
@@ -88,79 +77,109 @@
   /* Vetor de inrerrupcoes simuladas. */
   static uint32_t (*IsrHandler[ MAX_INTERRUPTS ])( void ) = { 0 };
 
-
   #define TICK_PERIOD_MS  	(1000/configTICK_RATE_HZ)
 
   INT32U SPvalue;
 
-  /* SImulacao da interrupcao do Tick Timer*/
-  static DWORD WINAPI TimerSimulado( LPVOID Parameter )
+  static void usleep(__int64 usec)
   {
-	  uint32_t MinimumWindowsBlockTime;
+      HANDLE timer;
+      LARGE_INTEGER ft;
 
-	  TIMECAPS TimeCaps;
+      /* Convert to 100 nanosecond interval,
+       * negative value indicates relative time
+       */
+      ft.QuadPart = -(10*usec);
 
-  	/* Set the timer resolution to the maximum possible. */
-  	if(timeGetDevCaps( &TimeCaps, sizeof( TimeCaps ) ) == MMSYSERR_NOERROR )
-  	{
-  		MinimumWindowsBlockTime = ( uint32_t ) TimeCaps.wPeriodMin;
-  		timeBeginPeriod( TimeCaps.wPeriodMin );
-
-  		/* Register an exit handler so the timeBeginPeriod() function can be
-  		matched with a timeEndPeriod() when the application exits. */
-  		SetConsoleCtrlHandler( EndProcess, TRUE );
-  	}
-  	else
-  	{
-  		MinimumWindowsBlockTime = ( uint32_t ) 20;
-  	}
-
-  	/* Just to prevent compiler warnings. */
-  	( void ) Parameter;
-
-  	for( ;; )
-  	{
-  		/* Wait until the timer expires and we can access the simulated interrupt
-  		variables.  *NOTE* this is not a 'real time' way of generating tick
-  		events as the next wake time should be relative to the previous wake
-  		time, not the time that Sleep() is called.  It is done this way to
-  		prevent overruns in this very non real time simulated/emulated
-  		environment. */
-  		if( TICK_PERIOD_MS < MinimumWindowsBlockTime )
-  		{
-  			Sleep( MinimumWindowsBlockTime );
-  		}
-  		else
-  		{
-  			Sleep( TICK_PERIOD_MS );
-  		}
-
-  		WaitForSingleObject( InterruptEventMutex, INFINITE );
-
-  		/* The timer has expired, generate the simulated tick event. */
-  		PendingInterrupts |= ( 1 << INTERRUPT_TICK );
-
-  		/* The interrupt is now pending - notify the simulated interrupt
-  		handler thread. */
-  		if( iNesting == 0 )
-  		{
-  			SetEvent( InterruptEvent );
-  		}
-
-  		/* Give back the mutex so the simulated interrupt handler unblocks
-  		and can	access the interrupt handler variables. */
-  		ReleaseMutex( InterruptEventMutex );
-  	}
-
-  	#ifdef __GNUC__
-  		/* Should never reach here - MingW complains if you leave this line out,
-  		MSVC complains if you put it in. */
-  		return 0;
-  	#endif
+      timer = CreateWaitableTimer(NULL, TRUE, NULL);
+      SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+      WaitForSingleObject(timer, INFINITE);
+      CloseHandle(timer);
   }
 
+  /*-----------------------------------------------------------*/
+  /* Executado no fim da simulacao para retornar o timer com a
+   * resolucao anterior
+   */
+  static BOOL WINAPI EndSimulation( DWORD dwCtrlType )
+  {
+  	TIMECAPS TimeCaps;
+
+  	( void ) dwCtrlType;
+
+  	if( timeGetDevCaps( &TimeCaps, sizeof( TimeCaps ) ) == MMSYSERR_NOERROR )
+  	{
+  		timeEndPeriod( TimeCaps.wPeriodMin );
+  	}
+
+  	return OK;
+  }
+
+  static __int64 increase_timer_resolution(void)
+  {
+	  	TIMECAPS tc;
+	  	__int64 res;
+
+		/* Aumenta para maxima resolucao do timer. */
+	  	if(timeGetDevCaps( &tc, sizeof( TIMECAPS ) ) == MMSYSERR_NOERROR )
+	  	{
+	  		res = tc.wPeriodMin;
+	  	}else
+	  	{
+	  		res = 20;
+	  	}
+  		timeBeginPeriod(res);
+  		SetConsoleCtrlHandler( EndSimulation, TRUE );
+  		return res;
+  }
+
+  /* Simulacao da interrupcao do Tick Timer*/
+  static DWORD WINAPI TimerSimulado( LPVOID Parameter )
+  {
+	    uint32_t tick_period_ms = (TICK_PERIOD_MS==0)?1:TICK_PERIOD_MS;
+	    __int64 res, freq = 0, time_1 = 0, time_2 = 0, elapsed_time_us,
+	    		avg_tick_time = 0;
+
+	  	/* Previne aviso do compilador. */
+	  	( void ) Parameter;
+
+	  	QueryPerformanceFrequency((LARGE_INTEGER *) &freq);
+
+	  	res=increase_timer_resolution();
+	  	if( tick_period_ms < res ) tick_period_ms = res;
+	  	QueryPerformanceCounter((LARGE_INTEGER *) &time_1);
+
+	  	for( ;; )
+	  	{
+	  		/* Gera uma interrupcao simulada do Timer */
+	  	    QueryPerformanceCounter((LARGE_INTEGER *) &time_2);
+	  	    	elapsed_time_us = (time_2-time_1);
+	  	  	  	elapsed_time_us = elapsed_time_us*(1000000UL)/freq;
+	  	  	    usleep(tick_period_ms*1000-elapsed_time_us);
+	  		QueryPerformanceCounter((LARGE_INTEGER *) &time_1);
+
+	  		GeraInterrupcaoSimulada(INTERRUPT_TICK);
+
+	  		elapsed_time_us = (time_1-time_2);
+	  		elapsed_time_us = elapsed_time_us*(1000000UL)/freq;
+	  		avg_tick_time+=elapsed_time_us;
+
+	  		if(OSGetTickCount()%1000 == 0)
+	  		{
+	  			avg_tick_time = avg_tick_time/1000;
+	  			//printf("%u\r\n",(uint32_t)avg_tick_time);
+	  			avg_tick_time = 0;
+	  		}
+	  	}
+
+	  	#ifdef __GNUC__
+	  		return 0;
+	  	#endif
+  }
 /*-----------------------------------------------------------*/
-/* SImulacao da interrupcao da UART */
+
+/*-----------------------------------------------------------*/
+/* Simulacao da interrupcao da UART */
 #define BAUDRATE  	  9600
 #define CHARTIME_MS   (10000/BAUDRATE)
 #include "../drivers/drivers.h"
@@ -243,26 +262,8 @@ static DWORD WINAPI UARTSimulada( LPVOID Parameter )
    		return 0;
    	#endif
 }
-  /*-----------------------------------------------------------*/
 
-  /*-----------------------------------------------------------*/
-
-  static BOOL WINAPI EndProcess( DWORD dwCtrlType )
-  {
-	  TIMECAPS TimeCaps;
-
-  	( void ) dwCtrlType;
-
-  	if( timeGetDevCaps( &TimeCaps, sizeof( TimeCaps ) ) == MMSYSERR_NOERROR )
-  	{
-  		/* Match the call to timeBeginPeriod( TimeCaps.wPeriodMin ) made when
-  		the process started with a timeEndPeriod() as the process exits. */
-  		timeEndPeriod( TimeCaps.wPeriodMin );
-  	}
-
-  	return OK;
-  }
-  /*-----------------------------------------------------------*/
+/*-----------------------------------------------------------*/
 
 #if (TASK_WITH_PARAMETERS == 1)
 void CreateVirtualStack(void(*FctPtr)(void*), INT16U NUMBER_OF_STACKED_BYTES, void *parameters)

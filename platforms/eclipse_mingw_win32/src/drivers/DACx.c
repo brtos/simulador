@@ -27,6 +27,7 @@ struct DAC_signal DAC_Signals[] = {{60,3}};
 static int DAC_res = 8;
 static int DAC_rate = 1000;
 
+#if 0
 static time_t clock_time(void)
 {
   unsigned long long time;
@@ -34,6 +35,7 @@ static time_t clock_time(void)
   GetSystemTimeAsFileTime((PFILETIME)&time);
   return (time_t)(time);
 }
+#endif
 
 static void DAC_Config(int res, int rate)
 {
