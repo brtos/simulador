@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <assert.h>
 
 /* BRTOS includes */
 #include "BRTOS.h"
@@ -18,7 +17,12 @@ BRTOS_TH th1, th2, th3;
 
 #define STACK_SIZE_DEF    16		/* tamanho de pilha padrão */
 
+#if 0
+#include <assert.h>
+#define ASSERT(x) assert(x)
+#else
 #define ASSERT(x) if(!(x)) while(1){}
+#endif
 
 int main(void) {
 

@@ -1,5 +1,3 @@
-
-#include "assert.h"
 #include "BRTOS.h"
 #include "device.h"
 #include "drivers.h"
