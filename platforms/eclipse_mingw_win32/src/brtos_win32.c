@@ -18,7 +18,7 @@ BRTOS_TH th1, th2, th3;
 
 #define STACK_SIZE_DEF    16		/* tamanho de pilha padrão */
 
-#define ASSERT(x)
+#define ASSERT(x) if(!(x)) while(1){}
 
 int main(void) {
 
