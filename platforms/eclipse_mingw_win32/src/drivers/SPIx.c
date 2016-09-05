@@ -28,8 +28,8 @@ static void Init_SPI(void *parameters)
 	// todo: Configure SPI Baud
 	//SPIConfigSet(spi_conf->baudrate, config);
 
-	assert(OSSemCreate(0, &SPITX[0]) == ALLOC_EVENT_OK);
-	assert(OSQueueCreate(spi_conf->queue_size, &SPIQ[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSSemCreate(0, &SPITX[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSQueueCreate(spi_conf->queue_size, &SPIQ[0]) == ALLOC_EVENT_OK);
 
 	if (spi_conf->mutex == true)
 	{

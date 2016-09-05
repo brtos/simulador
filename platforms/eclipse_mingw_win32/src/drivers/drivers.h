@@ -15,6 +15,7 @@
 #define INTERRUPT_ADC   5
 #define INTERRUPT_DAC	6
 
+#define ASSERT(x)
 
 typedef enum{
 	ADC_POLLING,

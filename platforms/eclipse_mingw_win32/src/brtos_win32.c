@@ -18,6 +18,8 @@ BRTOS_TH th1, th2, th3;
 
 #define STACK_SIZE_DEF    16		/* tamanho de pilha padrão */
 
+#define ASSERT(x)
+
 int main(void) {
 
 	  /* Inicia as variaveis do BRTOS */
@@ -29,18 +31,18 @@ int main(void) {
 #endif
 
 	  /* Instala as tarefas */
-	  assert(OSInstallTask(&TarefaExemplo,"Tarefa de exemplo",STACK_SIZE_DEF,31,&th1) == OK);
+	  ASSERT(OSInstallTask(&TarefaExemplo,"Tarefa de exemplo",STACK_SIZE_DEF,31,&th1) == OK);
 
-	  assert(OSInstallTask(&TarefaADC,"Teste driver ADC",STACK_SIZE_DEF,5,&th1) == OK);
+	  ASSERT(OSInstallTask(&TarefaADC,"Teste driver ADC",STACK_SIZE_DEF,5,&th1) == OK);
 
-//	  assert(OSInstallTask(&TarefaGPIO,"Teste driver GPIO",STACK_SIZE_DEF,10,&th2) == OK);
+//	  ASSERT(OSInstallTask(&TarefaGPIO,"Teste driver GPIO",STACK_SIZE_DEF,10,&th2) == OK);
 
-//	  assert(OSInstallTask(&SerialTask,"Teste driver UART",STACK_SIZE_DEF,4,&th3) == OK);
+//	  ASSERT(OSInstallTask(&SerialTask,"Teste driver UART",STACK_SIZE_DEF,4,&th3) == OK);
 
-	  assert(OSInstallTask(&TerminalTask,"Terminal",STACK_SIZE_DEF,6,NULL) == OK);
+	  ASSERT(OSInstallTask(&TerminalTask,"Terminal",STACK_SIZE_DEF,6,NULL) == OK);
 
 	  /* Inicia o escalonador do BRTOS */
-	  assert(BRTOSStart() == OK);
+	  ASSERT(BRTOSStart() == OK);
 
 	  return EXIT_SUCCESS;
 }

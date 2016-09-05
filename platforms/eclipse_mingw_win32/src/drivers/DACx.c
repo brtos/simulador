@@ -76,8 +76,8 @@ static void Init_DAC(void *parameters)
 
 	ConfiguraInterruptHandler( INTERRUPT_DAC, DACHandler);
 
-	assert(OSSemCreate(0, &DAC[0]) == ALLOC_EVENT_OK);
-	assert(OSQueueCreate(dac_conf->queue_size, &DACQ[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSSemCreate(0, &DAC[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSQueueCreate(dac_conf->queue_size, &DACQ[0]) == ALLOC_EVENT_OK);
 
 	if (dac_conf->write_mutex == true)
 	{

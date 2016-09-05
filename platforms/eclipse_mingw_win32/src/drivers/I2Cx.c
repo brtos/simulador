@@ -29,8 +29,8 @@ static void Init_I2C(void *parameters)
 	// todo: Configure I2C Baud
 	//I2CConfigSet(i2c_conf->baudrate, config);
 
-	assert(OSSemCreate(0, &I2CTX[0]) == ALLOC_EVENT_OK);
-	assert(OSQueueCreate(i2c_conf->queue_size, &I2CQ[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSSemCreate(0, &I2CTX[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSQueueCreate(i2c_conf->queue_size, &I2CQ[0]) == ALLOC_EVENT_OK);
 
 	if (i2c_conf->mutex == true)
 	{

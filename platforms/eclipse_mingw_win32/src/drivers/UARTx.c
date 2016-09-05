@@ -36,8 +36,8 @@ static void Init_UART(void *parameters)
 	// todo: Configure UART Baud
 	//UARTConfigSet(uart_conf->baudrate, config);
 
-	assert(OSSemCreate(0, &SerialTX[0]) == ALLOC_EVENT_OK);
-	assert(OSQueueCreate(uart_conf->queue_size, &SerialQ[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSSemCreate(0, &SerialTX[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSQueueCreate(uart_conf->queue_size, &SerialQ[0]) == ALLOC_EVENT_OK);
 
 	if (uart_conf->write_mutex == true){
 		OSMutexCreate (&SerialWMutex[0], 0);

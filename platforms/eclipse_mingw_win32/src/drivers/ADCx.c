@@ -91,8 +91,8 @@ static void Init_ADC(void *parameters)
 
 	ConfiguraInterruptHandler( INTERRUPT_ADC, ADCHandler);
 
-	assert(OSSemCreate(0, &ADC[0]) == ALLOC_EVENT_OK);
-	assert(OSQueueCreate(adc_conf->queue_size, &ADCQ[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSSemCreate(0, &ADC[0]) == ALLOC_EVENT_OK);
+	ASSERT(OSQueueCreate(adc_conf->queue_size, &ADCQ[0]) == ALLOC_EVENT_OK);
 
 	if (adc_conf->read_mutex == true)
 	{
