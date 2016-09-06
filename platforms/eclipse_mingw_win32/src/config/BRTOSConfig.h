@@ -126,7 +126,7 @@
 
 
 /// Stack Defines
-#define HEAP_SIZE 			128
+#define HEAP_SIZE 			256
 
 // Queue heap defines
 // Configurado com 1KB p/ filas

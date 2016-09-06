@@ -1,6 +1,7 @@
 #include "BRTOS.h"
 #include "device.h"
 #include "drivers.h"
+#include "time.h"
 
 #define NUM_ADC     1
 static BRTOS_Sem   *ADC[NUM_ADC];
