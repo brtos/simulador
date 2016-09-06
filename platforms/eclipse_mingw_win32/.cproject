@@ -29,14 +29,14 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.1911911792" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.1018387657" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1663910713" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/brtos_win32/src/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src/hal/MingW&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/hal/MemoryAllocation&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/brtos/includes&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/modules/terminal&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src/config&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.dialect.std.1511891063" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.531292321" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols"/>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.531292321" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1611421855" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.692053014" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug">
