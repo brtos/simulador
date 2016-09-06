@@ -279,11 +279,6 @@ void CreateVirtualStack(void(*FctPtr)(void), INT16U NUMBER_OF_STACKED_BYTES)
 		extern OS_CPU_TYPE STACK[];
 
 		ThreadState *pThreadState = NULL;
-
-		//OS_CPU_TYPE *stk_pt = (OS_CPU_TYPE*)&STACK[iStackAddress + (NUMBER_OF_STACKED_BYTES / sizeof(OS_CPU_TYPE))];
-
-		//int8_t *TopOfStack = ( int8_t * ) stk_pt;
-		//pThreadState = ( ThreadState * ) ( TopOfStack - sizeof( ThreadState ) - 4 );
 		pThreadState = ( ThreadState * )((OS_CPU_TYPE)&STACK[iStackAddress] + (OS_CPU_TYPE)NUMBER_MIN_OF_STACKED_BYTES);
 
 
