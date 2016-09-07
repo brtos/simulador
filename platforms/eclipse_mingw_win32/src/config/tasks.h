@@ -1,4 +1,4 @@
-void TarefaExemplo(void);
+void TarefaTempoDoSistema(void);
 void TarefaADC(void);
 void TarefaGPIO(void);
 void SerialTask(void);

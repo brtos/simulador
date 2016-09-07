@@ -3,12 +3,13 @@
 #include "device.h"
 #include "drivers/drivers.h"
 
-void TarefaExemplo(void)
+void TarefaTempoDoSistema(void)
 {
+	OSResetTime();
 	while(1)
 	{
-		//printf("Tick count: %u\r\n", OSGetTickCount());
-		DelayTask(100);
+		OSUpdateUptime();
+		DelayTask(configTICK_RATE_HZ);
 	}
 }
 void TarefaADC(void)

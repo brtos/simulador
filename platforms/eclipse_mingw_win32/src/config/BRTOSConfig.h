@@ -56,10 +56,10 @@
 #endif
 
 /// Define if TimerHook function is active
-#define TIMER_HOOK_EN 0
+#define TIMER_HOOK_EN 		   0
 
 /// Define if IdleHook function is active
-#define IDLE_HOOK_EN 0
+#define IDLE_HOOK_EN 		   0
 
 /// Enable or disable timers service
 #define BRTOS_TMR_EN           1
@@ -94,7 +94,7 @@
 
 /// Defines the maximum number of mutexes\n
 /// Limits the memory allocation for mutex
-#define BRTOS_MAX_MUTEX        4
+#define BRTOS_MAX_MUTEX        10
 
 /// Defines the maximum number of mailboxes\n
 /// Limits the memory allocation mailboxes
@@ -106,7 +106,7 @@
 
 
 /// TickTimer Defines
-#define configCPU_CLOCK_HZ          	(INT32U)168000000   ///< CPU clock in Hertz
+#define configCPU_CLOCK_HZ          	(INT32U)100000000   ///< CPU clock in Hertz
 
 #if (THREAD_METRIC == 1)
 	#define configTICK_RATE_HZ          (INT32U)100         ///< Tick timer rate in Hertz
@@ -119,19 +119,16 @@
 #define configRTC_PRE_SCALER        10
 #define OSRTCEN                     0
 
-
-
 // Stack Size of the Idle Task
 #define IDLE_STACK_SIZE             (INT16U)8
 
-
 /// Stack Defines
-#define HEAP_SIZE 			256
+#define HEAP_SIZE 			 256
 
 // Queue heap defines
 // Configurado com 1KB p/ filas
-#define QUEUE_HEAP_SIZE 8*128
+#define QUEUE_HEAP_SIZE      8*128
 
 // Dynamic head define. To be used by DynamicInstallTask and Dynamic Queues
-#define DYNAMIC_HEAP_SIZE		1*1024
+#define DYNAMIC_HEAP_SIZE	 1*1024
 
