@@ -120,13 +120,13 @@ void TerminalTask(void)
 
 	uart_init(&uart0);
 	uart = OSDevOpen("UART0", &uart0);
-
+	terminal_init(putchar);
 	printf("BRTOS terminal\r\n");
 	while(1)
 	{
 		if (OSDevRead(uart,&data,1) >= 1)
 		{
-			putchar(data);
+			//putchar(data);
 			if (terminal_input(data)) terminal_process();
 		}
 	}
