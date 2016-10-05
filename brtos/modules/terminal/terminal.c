@@ -18,29 +18,46 @@ static char __putchar_buf(char c)
 	printf_buf[printf_idx++%PRINTF_BUFSIZE] = c;
 	return c;
 }
-
-static char (*putchar_func)(char) = __putchar_buf;
+#endif
+static char (*putchar_func)(char);
 
 void term_putchar_install(char (*_putchar_func)(char))
 {
 	if(_putchar_func == NULL) return;
 	putchar_func = _putchar_func;
 }
-#endif
+
 
 #define STRCMP(a,b)		strcmp(a,b)
 #define TERM_FLUSH(a)	memset(a,0x00, sizeof(a))
 
 
 static term_input input = NULL;
+dcmd_t *cmd_head = NULL;
 
 void terminal_set_input (term_input _input)
 {
 	input = _input;
 }
 
+void terminal_init(char (*_putchar_func)(char))
+{
+	#ifdef TERM_PRINT
+	//printf_install_putchar(_putchar_func);
+	#endif
+	term_putchar_install(_putchar_func);
+	putchar_func('\n');
+	putchar_func('\r');
+	putchar_func('>');
+	putchar_func('>');
+}
+
 static int term_in_idx = 0;
+static int term_tmp_idx = 0;
+static char discard_char = 0;
+static volatile int cpi=0;
 static char term_in[TERM_INPUT_BUFSIZE];
+static char last_term_in[TERM_INPUT_BUFSIZE];
 
 char terminal_input (char c)
 {
@@ -49,22 +66,84 @@ char terminal_input (char c)
 		input(c);
 	}
 
-	if ((c=='\b' || c==0x7F) && term_in_idx > 0)
-	{
-		term_in[term_in_idx--] = '\0';
-		return 0;
-	}
-	else
-	{
-		term_in[term_in_idx++] = c;
-		if(c == '\n' || c == '\r' || (term_in_idx==(TERM_INPUT_BUFSIZE-1)))
-		{
-			term_in[term_in_idx-1]='\0';
-			return 1;
-		}else
-		{
+	if (c != 0x7F){
+		if (c != UP_KEY_CHAR){
+			if (!discard_char){
+				putchar_func(c);
+			}else{
+				discard_char--;
+				if (!discard_char){
+					c = UP_KEY_CHAR;
+				}else{
+					return 0;
+				}
+			}
+		}else{
+			discard_char = CHARS_TO_DISCARD;
 			return 0;
 		}
+		if (c != 13){
+			if (term_tmp_idx >= 0){
+				term_tmp_idx++;
+			}else{
+				term_tmp_idx = 1;
+			}
+		}else{
+			term_tmp_idx = 0;
+		}
+	}else{
+		term_tmp_idx--;
+		if (term_tmp_idx >= 0){
+			putchar_func(c);
+		}
+	}
+
+
+	if (term_tmp_idx >= 0){
+		if ((c=='\b' || c==0x7F) && term_in_idx > 0)
+		{
+			term_in[term_in_idx--] = '\0';
+			return 0;
+		}
+		else
+		{
+			// if up key pressed
+			if (c == UP_KEY_CHAR){
+  			  // erase last chars in case of up key pressed
+  			  while(term_in_idx)
+  			  {
+  				  putchar_func(0x7F);
+  				  term_in_idx--;
+  			  }
+  			  term_in_idx = 0;
+  			  if (last_term_in[0]){
+				  while(term_in_idx <= cpi){
+					  putchar_func(last_term_in[term_in_idx++]);
+				  }
+
+				  term_in_idx = 0;
+				  while(term_in_idx <= cpi)
+				  {
+					  term_in[term_in_idx] = last_term_in[term_in_idx];
+					  term_in_idx++;
+				  }
+				  term_in[term_in_idx] = '\0';
+  			  }
+			  return 0;
+			}else{
+				term_in[term_in_idx++] = c;
+				if(c == '\n' || c == '\r' || (term_in_idx==(TERM_INPUT_BUFSIZE-1)))
+				{
+					term_in[term_in_idx-1]='\0';
+					return 1;
+				}else
+				{
+					return 0;
+				}
+			}
+		}
+	}else{
+		return 0;
 	}
 }
 
@@ -102,6 +181,19 @@ static uint8_t search_cmd (char * c)
 	  }
 	}
   }
+  // Teste dos comandos dinâmicos
+  if (cmd_head != NULL){
+	dcmd_t *cmd_p = cmd_head;
+	uint8_t idx = NUMBER_OF_COMMANDS;
+	while(cmd_p != NULL){
+		if (STRCMP(cmd_p->cmd_name,c) == 0){
+			return idx;
+		}
+		cmd_p = cmd_p->next;
+		idx++;
+	}
+  }
+
   return 0; // command index not found, return default index 0
 }
 
@@ -124,6 +216,15 @@ CMD_FUNC(help)
 	{
 			TERM_PRINT("%s : ", cmds[c].cmd_name);
 			TERM_PRINT("%s\n\r", ListOfCmdDesc[c]);
+	}
+	// Teste dos comandos dinâmicos
+	if (cmd_head != NULL){
+		dcmd_t *cmd_p = cmd_head;
+		while(cmd_p != NULL){
+			TERM_PRINT("%s : ", cmd_p->cmd_name);
+			TERM_PRINT("%s\n\r", cmd_p->cmd_description);
+			cmd_p = cmd_p->next;
+		}
 	}
 	TERM_PRINT("----------------\n\r");
 #endif
@@ -159,8 +260,30 @@ void *terminal_process(void)
 		c = search_cmd(argv[0]);
 
 		TERM_PRINT("\r\n");
-		ret = cmds[c].cmd_func(argc, argv);
-		TERM_PRINT("\r\n");
+		if (c < NUMBER_OF_COMMANDS){
+			ret = cmds[c].cmd_func(argc, argv);
+		}else{
+			int idx = c - NUMBER_OF_COMMANDS;
+			dcmd_t *cmd_p = cmd_head;
+			while(idx){
+				cmd_p = cmd_p->next;
+				idx--;
+			}
+			ret = cmd_p->cmd_func(argc, argv);
+		}
+	    // copy last command
+	    cpi=0;
+	    while((term_in[cpi] != 0) || (term_in[cpi+1] != 0))
+	    {
+	      if (!term_in[cpi]){
+	    	  last_term_in[cpi] = 0x20;
+	      }else{
+	    	  last_term_in[cpi] = term_in[cpi];
+	      }
+		  cpi++;
+	    }
+	    last_term_in[cpi] = '\0';
+		TERM_PRINT("\r\n>>");
 	}
 
 	TERM_FLUSH(term_in);
@@ -168,3 +291,18 @@ void *terminal_process(void)
 	return (void *)ret;
 }
 
+void terminal_add_cmd(dcmd_t *handler, pf_cmd cmd, char *name, char *description){
+	dcmd_t *cmd_p = cmd_head;
+	if (cmd_head == NULL){
+		cmd_head = handler;
+	}else{
+		while(cmd_p->next != NULL){
+			cmd_p = cmd_p->next;
+		}
+		cmd_p->next = handler;
+	}
+	handler->cmd_func = cmd;
+	handler->cmd_name = name;
+	handler->cmd_description = description;
+	handler->next = NULL;
+}
