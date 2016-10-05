@@ -6,6 +6,6 @@
 [subrepo]
 	remote = https://github.com/brtos/brtos.git
 	branch = master
-	commit = ecb7fc5e841343e89b7261718f7fedd6760c49fd
-	parent = 799688733ddb0f1a13c8b19d21c943d59ddd2f46
+	commit = 612dba93e3c9679474c0f4bd12e955b0b815b1a3
+	parent = b8a559eb23445820d81bb8bb061acad298d647d6
 	cmdver = 0.3.0
