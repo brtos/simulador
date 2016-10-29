@@ -164,7 +164,11 @@ void OSTaskList(char *string)
 					  break;
 				  }
 				  sp_address++;
-			  }while((uint32_t)sp_address <= ContextTask[j].StackInit);			  
+			  #if (WATERMARK == 1) && (BRTOS_DYNAMIC_TASKS_ENABLED == 1)
+			  }while((uint32_t)sp_address <= ContextTask[j].StackPoint);
+              #else
+			  }while((uint32_t)sp_address <= ContextTask[j].StackInit);
+			  #endif
 			  #else
 			  i = 0;
 			  while(i<16)
@@ -321,7 +325,7 @@ void OSAvailableMemory(char *string)
 #else
     (void)PrintDecimal((int16_t)OSGetUsedHeapSize(), str);
 #endif
-    string += mem_cpy(string, &str[2]);
+    string += mem_cpy(string, &str[1]);
     string += mem_cpy(string, " of ");
 
 	#if (!BRTOS_DYNAMIC_TASKS_ENABLED)
@@ -338,7 +342,7 @@ void OSAvailableMemory(char *string)
     UserExitCritical();
 
     (void)PrintDecimal(address, str);
-    string += mem_cpy(string, &str[2]);
+    string += mem_cpy(string, &str[1]);
 
     string += mem_cpy(string, " of ");
 
@@ -349,7 +353,7 @@ void OSAvailableMemory(char *string)
 	#if ((BRTOS_DYNAMIC_QUEUE_ENABLED == 1) && (!BRTOS_DYNAMIC_TASKS_ENABLED))
     	string += mem_cpy(string, "DYNAMIC QUEUE MEMORY HEAP: ");
     	(void)PrintDecimal((int16_t)OSGetUsedHeapSize(), str);
-    	string += mem_cpy(string, &str[2]);
+    	string += mem_cpy(string, &str[1]);
     	string += mem_cpy(string, " of ");
     	string += mem_cpy(string, PrintDecimal(DYNAMIC_HEAP_SIZE, str));
     	string += mem_cpy(string, "\n\r");
