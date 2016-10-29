@@ -28,6 +28,7 @@
 #include "stdio.h"
 #define TERM_PRINT(...)		printf(__VA_ARGS__); fflush(stdout);
 
+
 /*******************************************************/
 
 #endif /* APP_TERMINAL_CFG_H_ */
