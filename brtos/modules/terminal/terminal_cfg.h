@@ -12,7 +12,7 @@
 #define TERM_INPUT_BUFSIZE 		32
 #define UP_KEY_CHAR				(char)-32
 #define CHARS_TO_DISCARD		1
-
+//#define CUSTOM_PRINTF           0
 /* Supported commands */
 /* Must be listed in alphabetical order !!!! */
 
