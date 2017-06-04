@@ -65,5 +65,7 @@ typedef  struct{
 
 COMMAND_TABLE(EXPAND_AS_PROTOTYPES)
 
+#define printf_terminal(...)  TERM_PRINT(__VA_ARGS__);
+
 
 #endif /* APP_TERMINAL_H_ */

@@ -42,15 +42,16 @@ void terminal_set_input (term_input _input)
 
 void terminal_init(char (*_putchar_func)(char))
 {
-	#if defined(TERM_PRINT) && defined(CUSTOM_PRINTF)
-	printf_install_putchar(_putchar_func);
-	#else
 	term_putchar_install(_putchar_func);
-	#endif
+
 	putchar_func('\n');
 	putchar_func('\r');
 	putchar_func('>');
 	putchar_func('>');
+
+	#if CUSTOM_PRINTF
+		printf_install_putchar(_putchar_func);
+	#endif
 }
 
 static int term_in_idx = 0;
