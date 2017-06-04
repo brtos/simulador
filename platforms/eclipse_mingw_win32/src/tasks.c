@@ -111,22 +111,35 @@ static void uart_init(uart_config_t* uart0 )
 		uart0->read_mutex = false;
 		uart0->write_mutex = true;
 }
+
+OS_Device_Control_t *uart;
+static char term_putchar(char c)
+{
+	if (OSDevSet(uart,CTRL_ACQUIRE_WRITE_MUTEX,50) == OK)
+	{
+		OSDevWrite(uart,&c,1);
+		OSDevSet(uart,CTRL_RELEASE_WRITE_MUTEX,0);
+	}
+
+	return c;
+}
+
+
 void TerminalTask(void)
 {
 	uint8_t data = '\0';
 
-	OS_Device_Control_t *uart;
 	uart_config_t uart0;
 
 	uart_init(&uart0);
 	uart = OSDevOpen("UART0", &uart0);
-	terminal_init(putchar);
-	printf("BRTOS terminal\r\n");
+
+	terminal_init(term_putchar);
+	printf_terminal("BRTOS terminal\r\n");
 	while(1)
 	{
 		if (OSDevRead(uart,&data,1) >= 1)
 		{
-			//putchar(data);
 			if (terminal_input(data)) terminal_process();
 		}
 	}

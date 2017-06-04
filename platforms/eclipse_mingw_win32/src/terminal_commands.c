@@ -30,10 +30,6 @@
 #include "stdio.h"
 #include "stddef.h"
 
-#define printf_terminal(...)  TERM_PRINT(__VA_ARGS__);
-#define SPRINTF(a,...)		  snprintf_lib(a,256,__VA_ARGS__)
-
-
 void terminal_newline(void)
 {
 	printf_terminal("\n\r");

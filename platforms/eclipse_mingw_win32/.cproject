@@ -16,7 +16,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.582139134." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.debug.1546149683" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.debug.1822826227" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.debug"/>
-							<builder buildPath="${workspace_loc:/brtos_win32}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.875798409" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
+							<builder buildPath="${workspace_loc:/brtos_win32}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.875798409" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="unlimited" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.1113787719" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.746733841" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -34,6 +34,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/brtos/includes&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../brtos/modules/terminal&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src/config&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../libs&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.dialect.std.1511891063" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.531292321" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols"/>

@@ -25,9 +25,14 @@
 
 #define HELP_DESCRIPTION         1
 
+#define CUSTOM_PRINTF 		1
+#if CUSTOM_PRINTF
+#include "printf_lib.h"
+#define TERM_PRINT(...)		printf_lib(__VA_ARGS__);
+#else
 #include "stdio.h"
 #define TERM_PRINT(...)		printf(__VA_ARGS__); fflush(stdout);
-
+#endif
 
 /*******************************************************/
 
