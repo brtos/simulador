@@ -109,7 +109,7 @@
 
 /// Timer defines
 #if  (ostick_t == uint64_t)
-#define MAX_TIMER					0xffffffffffffffff
+#define MAX_TIMER					0xffffffffffffffffULL
 #elif (ostick_t == uint32_t)
 #define MAX_TIMER					0xffffffff
 #else
@@ -532,10 +532,11 @@ typedef struct
 * \fn uint8_t OSUninstallTask(BRTOS_TH TaskHandle)
 * \brief Uninstall a task from the dynamic memory
 * \param TaskHandle The task handle id
+* \param safety_off TRUE ensures that all system objects used by the task were deleted
 * \return OK Task successfully uninstalled
 * \return NOT_VALID_TASK Not valid task id or task is waiting for an event
 *********************************************************************************************/
-uint8_t OSUninstallTask(BRTOS_TH TaskHandle);
+uint8_t OSUninstallTask(BRTOS_TH TaskHandle, OS_CPU_TYPE safety_off);
 #define UninstallTask OSUninstallTask
 
 /*****************************************************************************************//**
@@ -582,6 +583,22 @@ void OS_TICK_HANDLER(void);
 * \return NO_MEMORY There was not enough memory to start all tasks
 *********************************************************************************************/
 uint8_t BRTOSStart(void);
+
+/*****************************************************************************************//**
+* \fn BRTOS_TH OSGetCurrentTaskHandle(void)
+* \brief Return the handle of the current task.
+*  The user must call this function in order to receive the current task handle.
+* \return current task handle
+*********************************************************************************************/
+BRTOS_TH OSGetCurrentTaskHandle(void);
+
+/*****************************************************************************************//**
+* \fn BRTOS_TH OSGetTaskPriority(BRTOS_TH task_handle)
+* \brief Return the priority of the specified task.
+*  The user must call this function in order to receive the priority of the specified task.
+* \return task priority
+*********************************************************************************************/
+BRTOS_TH OSGetTaskPriority(BRTOS_TH task_handle);
 
 /*****************************************************************************************//**
 * \fn uint8_t OSDelayTask(ostick_t time_wait)
@@ -631,7 +648,11 @@ ostick_t OSGetCount(void);
 * \brief Update the tick counter.
 * \return NONE
 *********************************************************************************************/
+#if (TICKLESS == 1)
+void OSIncCounter(ostick_t inc);
+#else
 void OSIncCounter(void);
+#endif
 
 /*****************************************************************************************//**
 * \fn void PreInstallTasks(void)

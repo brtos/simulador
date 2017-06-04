@@ -279,6 +279,54 @@ uint8_t OSSchedule(void)
 
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
+/////      Get the current task handle                 /////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+BRTOS_TH OSGetCurrentTaskHandle(void)
+{
+	OS_SR_SAVE_VAR
+	BRTOS_TH task_handle;
+
+  	OSEnterCritical();
+	task_handle = (BRTOS_TH)currentTask;
+  	OSExitCritical();
+	return task_handle;
+}
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
+
+
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+/////      Get task priority               			   /////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+OS_CPU_TYPE OSGetTaskPriority(BRTOS_TH task_handle)
+{
+	OS_SR_SAVE_VAR
+	OS_CPU_TYPE task_prio;
+
+  	OSEnterCritical();
+	task_prio = (OS_CPU_TYPE)ContextTask[task_handle].Priority;
+  	OSExitCritical();
+	return task_prio;
+}
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
+
+
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
 /////      Get the current tick count                  /////
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
@@ -324,11 +372,39 @@ ostick_t OSGetCount(void)
 /////      Update the tick count                       /////
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
+#if (TICKLESS == 1)
+void OSIncCounter(ostick_t inc)
+{
+	if(inc !=1)
+	{
+		osdtick_t timeout = (osdtick_t)((osdtick_t)OSTickCounter + (osdtick_t)inc);
+
+        if (sizeof_ostick_t < 8){
+        	if (timeout >= TICK_COUNT_OVERFLOW)
+        	{
+        		OSTickCounter = (ostick_t)(timeout - TICK_COUNT_OVERFLOW);
+        	}
+        	else
+        	{
+        		OSTickCounter = (ostick_t)timeout;
+        	}
+        }else{
+        	OSTickCounter = (ostick_t)timeout;
+        }
+	} else
+	{
+		  OSTickCounter++;
+		  if (OSTickCounter == TICK_COUNT_OVERFLOW) OSTickCounter = 0;
+	}
+}
+#else
+
 void OSIncCounter(void)
 {
 	  OSTickCounter++;
 	  if (OSTickCounter == TICK_COUNT_OVERFLOW) OSTickCounter = 0;
 }
+#endif
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
@@ -1327,12 +1403,14 @@ uint8_t OSUnBlockMultipleTask(uint8_t TaskStart, uint8_t TaskNumber)
 /////                                                  /////
 /////  Parameters:                                     /////
 /////  Task handler									   /////
+/////  Turn off of the safety option				   /////
 /////                                                  /////
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
-uint8_t OSUninstallTask(BRTOS_TH TaskHandle){
+uint8_t OSUninstallTask(BRTOS_TH TaskHandle, OS_CPU_TYPE safety_off){
 	  OS_SR_SAVE_VAR
 	  ContextType *Task;
+	  ContextType *Task_timer = Head;
 
 	  if (currentTask)
 		  // Enter Critical Section
@@ -1367,43 +1445,60 @@ uint8_t OSUninstallTask(BRTOS_TH TaskHandle){
 	  // Checks whether the task handler is valid
 	  if (Task != NULL){
 		  // Verify if the task is waiting for an event
-		  if ((OSReadyList & PriorityMask[Task->Priority]) == PriorityMask[Task->Priority]){
-			  // If not, it is possible to proceed with the uninstall
-			  TaskAlloc = TaskAlloc & ~(1 << (TaskHandle-1));
-			  OSReadyList = OSReadyList & ~(PriorityMask[Task->Priority]);
-			  PriorityVector[Task->Priority] = EMPTY_PRIO;
+		  if ((OSReadyList & PriorityMask[Task->Priority]) != PriorityMask[Task->Priority]){
+			  // if so, verify if the user ensures that all system objects were deleted
+			  if (safety_off == TRUE){
+				  // Search the task into timer wait list
+				  while(Task_timer != NULL)
+				  {
+					  if (Task_timer == Task)
+					  {
+						// Remove from delay list
+						RemoveFromDelayList();
+						break;
+					  }
 
-			  BRTOS_DEALLOC((void*)Task->StackInit);
+					  Task_timer = Task_timer->Next;
+				  }
+			  }else{
+				  if (currentTask)
+					  // Exit Critical Section
+					  OSExitCritical();
 
-			  Task->StackInit = 0;
-			  Task->StackPoint = 0;
-			  Task->StackSize = 0;
-			  Task->Priority = EMPTY_PRIO;
-			  Task->TimeToWait = NO_TIMEOUT;
-			  Task->Next     =  NULL;
-			  Task->Previous =  NULL;
-
-			  NumberOfInstalledTasks--;
-
-			  // If uninstalled task if the current task, change context
-			  /* OBS.: In the switch context, the context of the uninstalled task will be
-			  saved at the deallocated memory. That is not a problem, because the memory will be
-			  reused by another task and the current task will never be called again by the system */
-			  if (TaskHandle == currentTask) ChangeContext();
-
-			  if (currentTask)
-				  // Exit Critical Section
-				  OSExitCritical();
-
-			  return OK;
+				  return TASK_WAITING_EVENT;
+			  }
 		  }else{
-			  if (currentTask)
-				  // Exit Critical Section
-				  OSExitCritical();
-
-			  return TASK_WAITING_EVENT;
+			  // if not, remove the task from the ready list
+			  OSReadyList = OSReadyList & ~(PriorityMask[Task->Priority]);
 		  }
 
+		  // Proceed with the uninstall
+		  TaskAlloc = TaskAlloc & ~(1 << (TaskHandle-1));
+		  PriorityVector[Task->Priority] = EMPTY_PRIO;
+
+		  BRTOS_DEALLOC((void*)Task->StackInit);
+
+		  Task->StackInit = 0;
+		  Task->StackPoint = 0;
+		  Task->StackSize = 0;
+		  Task->Priority = EMPTY_PRIO;
+		  Task->TimeToWait = NO_TIMEOUT;
+		  Task->Next     =  NULL;
+		  Task->Previous =  NULL;
+
+		  NumberOfInstalledTasks--;
+
+		  // If uninstalled task if the current task, change context
+		  /* OBS.: In the switch context, the context of the uninstalled task will be
+		  saved at the deallocated memory. That is not a problem, because the memory will be
+		  reused by another task and the current task will never be called again by the system */
+		  if (TaskHandle == currentTask) ChangeContext();
+
+		  if (currentTask)
+			  // Exit Critical Section
+			  OSExitCritical();
+
+		  return OK;
 	  }
 
 	  if (currentTask)
