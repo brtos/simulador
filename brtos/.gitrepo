@@ -7,5 +7,5 @@
 	remote = https://github.com/brtos/brtos.git
 	branch = master
 	commit = 1a85dd289089cb395b619e11b823955361c714c7
-	parent = e6742536dfe97a7323c684d23c4ab78bfab6e74a
+	parent = a61adf80e101b84977116b78a3457b7996174673
 	cmdver = 0.3.0
